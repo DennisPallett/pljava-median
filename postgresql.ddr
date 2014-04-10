@@ -1,0 +1,31 @@
+SQLActions[] = {
+  "BEGIN INSTALL
+	CREATE TYPE MedianAggState AS (
+		size		bigint,
+		elements	bytea
+	);
+
+	CREATE OR REPLACE FUNCTION median_double_transfn(text, double precision)
+	RETURNS text
+	AS 'nl.pallett.pljavamedian.PLJavaMedian.transfer_double'
+	LANGUAGE java;
+
+	CREATE OR REPLACE FUNCTION median_finalfn_double(text)
+	RETURNS double precision
+	AS 'nl.pallett.pljavamedian.PLJavaMedian.final_double'
+	LANGUAGE java;
+
+	CREATE AGGREGATE median(double precision) (
+	  SFUNC = median_double_transfn,
+	  STYPE = text,
+	  FINALFUNC = median_finalfn_double
+	);
+   END INSTALL",
+
+  "BEGIN REMOVE
+	DROP AGGREGATE MEDIAN (double precision); 
+	DROP FUNCTION median_double_transfn (text, double precision);
+	DROP FUNCTION median_finalfn_double(text);
+	DROP TYPE MedianAggState;
+   END REMOVE"
+}
